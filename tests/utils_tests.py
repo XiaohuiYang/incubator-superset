@@ -9,14 +9,14 @@ from decimal import Decimal
 import unittest
 import uuid
 
-from mock import patch
+from mock import call, Mock, patch
 import numpy
 
 from superset.exceptions import SupersetException
 from superset.utils import (
     base_json_conv, datetime_f, json_int_dttm_ser, json_iso_dttm_ser,
     JSONEncodedDict, memoized, merge_extra_filters, merge_request_params,
-    parse_human_timedelta, validate_json, zlib_compress, zlib_decompress_to_string,
+    parse_human_timedelta, retry, validate_json, zlib_compress, zlib_decompress_to_string,
 )
 
 
@@ -331,3 +331,15 @@ class UtilsTestCase(unittest.TestCase):
         result8 = instance.test_method(1, 2, 3)
         self.assertEqual(instance.watcher, 4)
         self.assertEqual(result1, result8)
+
+    def test_retry(self):
+        flaky = Mock(side_effect=(RuntimeError(), RuntimeError(), 10))
+        setattr(flaky, '__name__', str('flaky'))
+        decorated = retry((RuntimeError,), tries=3, delay=0.1, backoff=2)(flaky)
+
+        start = datetime.now()
+        result = decorated()
+        end = datetime.now()
+        self.assertEqual(result, 10)
+        flaky.assert_has_calls([call(), call(), call()])
+        self.assertGreaterEqual(end - start, timedelta(seconds=0.3))
