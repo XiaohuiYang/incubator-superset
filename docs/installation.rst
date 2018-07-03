@@ -660,7 +660,10 @@ mandatory bcc.
 * Be mindful of the concurrency setting for celery (using ``-c 4``).
   Selenium/webdriver instances can consume a lot of CPU / memory on your servers.
 
-* ``--pool=(gevent|eventlet)`` is untested
+* In some cases, if you notice a lot of leaked ``geckodriver`` processes, try running
+  your celery processes with ::
+
+    celery worker --pool=prefork --max-tasks-per-child=128 ...
 
 * It is recommended to run separate workers for ``sql_lab`` and
   ``email_reports`` tasks. Can be done by using ``queue`` field in ``CELERY_ANNOTATIONS``

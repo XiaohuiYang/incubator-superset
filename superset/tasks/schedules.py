@@ -18,6 +18,7 @@ from flask import render_template, Response, session, url_for
 from flask_babel import gettext as __
 from flask_login import login_user
 import requests
+from retry.api import retry_call
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import chrome, firefox
 import simplejson as json
@@ -34,7 +35,7 @@ from superset.models.schedules import (
 from superset.tasks.celery_app import app as celery_app
 from superset.utils import (
     get_email_address_list,
-    retry,
+    is_v2_dash,
     send_email_smtp,
 )
 
@@ -171,14 +172,40 @@ def create_webdriver():
     return driver
 
 
+def destroy_webdriver(driver):
+    """
+    Destroy a driver
+    """
+
+    # This is some very flaky code in selenium. Hence the retries
+    # and catch-all exceptions
+    try:
+        retry_call(driver.close, tries=2)
+    except Exception:
+        pass
+    try:
+        driver.quit()
+    except Exception:
+        pass
+
+
 def deliver_dashboard(schedule):
     """
     Given a schedule, delivery the dashboard as an email report
     """
     dashboard = schedule.dashboard
+
+    if is_v2_dash(json.loads(dashboard.position_json)):
+        version = 'v2'
+        find_element_method = 'find_element_by_class_name'
+    else:
+        version = 'v1'
+        find_element_method = 'find_element_by_id'
+
     dashboard_url = _get_url_path(
         'Superset.dashboard',
         dashboard_id=dashboard.slug,
+        version=version,
     )
 
     # Create a driver, fetch the page, wait for the page to render
@@ -190,11 +217,13 @@ def deliver_dashboard(schedule):
 
     # Set up a function to retry once for the element.
     # This is buggy in certain selenium versions with firefox driver
-    get_element = retry((Exception,), delay=PAGE_RENDER_WAIT)(
-        driver.find_element_by_class_name,
+    get_element = getattr(driver, find_element_method)
+    element = retry_call(
+        get_element,
+        fargs=['grid-container'],
+        tries=2,
+        delay=PAGE_RENDER_WAIT,
     )
-
-    element = get_element('grid-container')
 
     try:
         screenshot = element.screenshot_as_png
@@ -203,7 +232,7 @@ def deliver_dashboard(schedule):
         # In such cases, take a screenshot of the entire page.
         screenshot = driver.screenshot()  # pylint: disable=no-member
     finally:
-        driver.quit()
+        destroy_webdriver(driver)
 
     # Generate the email body and attachments
     email = _generate_mail_content(
@@ -292,12 +321,12 @@ def _get_slice_visualization(schedule):
 
     # Set up a function to retry once for the element.
     # This is buggy in certain selenium versions with firefox driver
-    get_element = retry((Exception,), delay=PAGE_RENDER_WAIT)(
+    element = retry_call(
         driver.find_element_by_class_name,
+        fargs=['chart-container'],
+        tries=2,
+        delay=PAGE_RENDER_WAIT,
     )
-
-    # Get the chart-container element
-    element = get_element('chart-container')
 
     try:
         screenshot = element.screenshot_as_png
@@ -306,7 +335,7 @@ def _get_slice_visualization(schedule):
         # In such cases, take a screenshot of the entire page.
         screenshot = driver.screenshot()  # pylint: disable=no-member
     finally:
-        driver.quit()
+        destroy_webdriver(driver)
 
     # Generate the email body and attachments
     return _generate_mail_content(

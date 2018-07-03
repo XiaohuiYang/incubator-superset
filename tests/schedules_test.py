@@ -162,7 +162,6 @@ class SchedulesTestCase(unittest.TestCase):
         # Ensure that we are able to login with the driver
         driver.find_elements_by_id.side_effect = [True, False]
         driver.find_element_by_class_name.return_value = element
-        setattr(driver.find_element_by_class_name, '__name__', str('blah'))
         element.screenshot_as_png = read_fixture('sample.png')
 
         schedule = db.session.query(DashboardEmailSchedule).filter_by(
@@ -185,8 +184,8 @@ class SchedulesTestCase(unittest.TestCase):
 
         # Ensure that we are able to login with the driver
         driver.find_elements_by_id.side_effect = [True, False]
+        driver.find_element_by_id.return_value = element
         driver.find_element_by_class_name.return_value = element
-        setattr(driver.find_element_by_class_name, '__name__', str('blah'))
         element.screenshot_as_png = read_fixture('sample.png')
 
         schedule = db.session.query(DashboardEmailSchedule).filter_by(
@@ -219,9 +218,8 @@ class SchedulesTestCase(unittest.TestCase):
 
         # Ensure that we are able to login with the driver
         driver.find_elements_by_id.side_effect = [True, False]
+        driver.find_element_by_id.return_value = element
         driver.find_element_by_class_name.return_value = element
-        setattr(driver.find_element_by_class_name, '__name__', str('blah'))
-
         driver.screenshot.return_value = read_fixture('sample.png')
 
         schedule = db.session.query(DashboardEmailSchedule).filter_by(
@@ -251,7 +249,6 @@ class SchedulesTestCase(unittest.TestCase):
         # Ensure that we are able to login with the driver
         driver.find_elements_by_id.side_effect = [True, False]
         driver.find_element_by_class_name.return_value = element
-        setattr(driver.find_element_by_class_name, '__name__', str('blah'))
         element.screenshot_as_png = read_fixture('sample.png')
 
         schedule = db.session.query(DashboardEmailSchedule).filter_by(
@@ -283,7 +280,6 @@ class SchedulesTestCase(unittest.TestCase):
         # Ensure that we are able to login with the driver
         driver.find_elements_by_id.side_effect = [True, False]
         driver.find_element_by_class_name.return_value = element
-        setattr(driver.find_element_by_class_name, '__name__', str('blah'))
         element.screenshot_as_png = read_fixture('sample.png')
 
         schedule = db.session.query(SliceEmailSchedule).filter_by(
@@ -315,7 +311,6 @@ class SchedulesTestCase(unittest.TestCase):
         # Ensure that we are able to login with the driver
         driver.find_elements_by_id.side_effect = [True, False]
         driver.find_element_by_class_name.return_value = element
-        setattr(driver.find_element_by_class_name, '__name__', str('blah'))
         element.screenshot_as_png = read_fixture('sample.png')
 
         schedule = db.session.query(SliceEmailSchedule).filter_by(

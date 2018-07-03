@@ -1555,7 +1555,7 @@ class Superset(BaseSupersetView):
         dash.owners = [g.user] if g.user else []
         dash.dashboard_title = data['dashboard_title']
 
-        is_v2_dash = Superset._is_v2_dash(data['positions'])
+        is_v2_dash = utils.is_v2_dash(data['positions'])
         if data['duplicate_slices']:
             # Duplicating slices as well, mapping old ids to new ones
             old_to_new_sliceids = {}
@@ -1612,16 +1612,9 @@ class Superset(BaseSupersetView):
         return 'SUCCESS'
 
     @staticmethod
-    def _is_v2_dash(positions):
-        return (
-            isinstance(positions, dict) and
-            positions.get('DASHBOARD_VERSION_KEY') == 'v2'
-        )
-
-    @staticmethod
     def _set_dash_metadata(dashboard, data):
         positions = data['positions']
-        is_v2_dash = Superset._is_v2_dash(positions)
+        is_v2_dash = utils.is_v2_dash(positions)
 
         # @TODO remove upon v1 deprecation
         if not is_v2_dash:
@@ -2145,10 +2138,7 @@ class Superset(BaseSupersetView):
         #   view = v2
         #   edit = v2
         dashboard_layout = dash.data.get('position_json', {})
-        is_v2_dash = (
-            isinstance(dashboard_layout, dict) and
-            dashboard_layout.get('DASHBOARD_VERSION_KEY') == 'v2'
-        )
+        is_v2_dash = utils.is_v2_dash(dashboard_layout)
 
         force_v1 = request.args.get('version') == 'v1' and not is_v2_dash
         force_v2 = request.args.get('version') == 'v2'
