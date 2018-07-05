@@ -96,5 +96,3 @@ def get_scheduler_model(report_type):
         return DashboardEmailSchedule
     elif report_type == ScheduleType.slice.value:
         return SliceEmailSchedule
-
-    return None
