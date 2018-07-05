@@ -446,6 +446,9 @@ CAN_FALLBACK_TO_DASH_V1_EDIT_MODE = True
 PLANNED_V2_AUTO_CONVERT_DATE = None  # e.g. '2018-06-16'
 V2_FEEDBACK_URL = None  # e.g., 'https://goo.gl/forms/...'
 
+# Enable / disable scheduled email reports
+ENABLE_SCHEDULED_EMAIL_REPORTS = False
+
 # Email reports - minimum time resolution (in minutes) for the crontab
 EMAIL_REPORTS_CRON_RESOLUTION = 15
 

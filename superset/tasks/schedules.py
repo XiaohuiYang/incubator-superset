@@ -10,8 +10,10 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from datetime import datetime, timedelta
 from email.utils import make_msgid, parseaddr
+import logging
 import time
 import urllib
+
 
 import croniter
 from flask import render_template, Response, session, url_for
@@ -41,6 +43,7 @@ from superset.utils import (
 
 # Globals
 config = app.config
+logging.getLogger('tasks.email_reports').setLevel(logging.INFO)
 
 # Time in seconds, we will wait for the page to load and render
 PAGE_RENDER_WAIT = 30
@@ -374,7 +377,7 @@ def schedule_email_report(task, report_type, schedule_id):
 
     # The user may have disabled the schedule. If so, ignore this
     if not schedule.active:
-        # TODO: Log the action
+        logging.info('Ignoring deactivated schedule')
         return
 
     if report_type == ScheduleType.dashboard.value:
@@ -432,6 +435,11 @@ def schedule_window(report_type, start_at, stop_at, resolution):
 @celery_app.task(name='email_reports.schedule_hourly')
 def schedule_hourly():
     """ Celery beat job meant to be invoked hourly """
+
+    if not config.get('ENABLE_SCHEDULED_EMAIL_REPORTS'):
+        logging.info('Scheduled email reports not enabled in config')
+        return
+
     resolution = config.get('EMAIL_REPORTS_CRON_RESOLUTION', 0) * 60
 
     # Get the top of the hour

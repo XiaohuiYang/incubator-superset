@@ -16,7 +16,7 @@ from flask_babel import gettext as __
 from flask_babel import lazy_gettext as _
 import simplejson as json
 
-from superset import appbuilder, db, security_manager
+from superset import app, appbuilder, db, security_manager
 from superset.exceptions import SupersetException
 from superset.models.core import Dashboard, Slice
 from superset.models.schedules import (
@@ -175,20 +175,25 @@ class SliceEmailScheduleView(EmailScheduleView):
     }
 
 
-appbuilder.add_separator('Manage')
+def _register_schedule_menus():
+    appbuilder.add_separator('Manage')
 
-appbuilder.add_view(
-    DashboardEmailScheduleView,
-    'Dashboard Email Schedules',
-    label=__('Dashboard Emails'),
-    category='Manage',
-    category_label=__('Manage'),
-    icon='fa-search')
+    appbuilder.add_view(
+        DashboardEmailScheduleView,
+        'Dashboard Email Schedules',
+        label=__('Dashboard Emails'),
+        category='Manage',
+        category_label=__('Manage'),
+        icon='fa-search')
 
-appbuilder.add_view(
-    SliceEmailScheduleView,
-    'Chart Emails',
-    label=__('Chart Email Schedules'),
-    category='Manage',
-    category_label=__('Manage'),
-    icon='fa-search')
+    appbuilder.add_view(
+        SliceEmailScheduleView,
+        'Chart Emails',
+        label=__('Chart Email Schedules'),
+        category='Manage',
+        category_label=__('Manage'),
+        icon='fa-search')
+
+
+if app.config.get('ENABLE_SCHEDULED_EMAIL_REPORTS'):
+    _register_schedule_menus()
